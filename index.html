@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teste de áudio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+      text-align: center;
+    }
+    button {
+      padding: 18px 25px;
+      font-size: 20px;
+      border: 0;
+      border-radius: 12px;
+      background: #167d48;
+      color: white;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Teste do microfone</h2>
+  <p>Toque no botão e fale uma frase.</p>
+
+  <button onclick="ouvir()">🎙️ Ouvir</button>
+  <textarea id="texto" placeholder="A transcrição aparecerá aqui"></textarea>
+  <p id="status"></p>
+
+  <script>
+    function ouvir() {
+      const API = window.SpeechRecognition ||
+                  window.webkitSpeechRecognition;
+
+      if (!API) {
+        document.getElementById('status').textContent =
+          'Reconhecimento de voz não disponível.';
+        return;
+      }
+
+      const reconhecimento = new API();
+      reconhecimento.lang = 'pt-BR';
+      reconhecimento.continuous = false;
+      reconhecimento.interimResults = true;
+
+      document.getElementById('status').textContent = 'Estou ouvindo...';
+
+      reconhecimento.onresult = evento => {
+        let resultado = '';
+        for (let i = 0; i < evento.results.length; i++) {
+          resultado += evento.results[i][0].transcript;
+        }
+        document.getElementById('texto').value = resultado;
+      };
+
+      reconhecimento.onerror = evento => {
+        document.getElementById('status').textContent =
+          'Erro: ' + evento.error;
+      };
+
+      reconhecimento.onend = () => {
+        document.getElementById('status').textContent =
+          'Teste finalizado.';
+      };
+
+      reconhecimento.start();
+    }
+  </script>
+</body>
+</html>
