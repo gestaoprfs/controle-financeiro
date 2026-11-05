@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrada por voz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 35px 20px;
+      background: #f4f6f8;
+    }
+    button {
+      padding: 16px 24px;
+      font-size: 18px;
+      border: 0;
+      border-radius: 10px;
+      background: #176b45;
+      color: white;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 24px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎙️ Lançamento por voz</h2>
+  <p>Toque no botão e fale o lançamento.</p>
+
+  <button id="iniciar" onclick="iniciarVoz()">Começar a falar</button>
+  <p id="status">Aguardando você iniciar.</p>
+
+  <script>
+    function iniciarVoz() {
+      const Reconhecimento =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!Reconhecimento) {
+        document.getElementById('status').textContent =
+          'Este navegador não oferece reconhecimento de voz. Tente no Chrome.';
+        return;
+      }
+
+      const reconhecimento = new Reconhecimento();
+      reconhecimento.lang = 'pt-BR';
+      reconhecimento.interimResults = false;
+      reconhecimento.continuous = false;
+
+      document.getElementById('status').textContent =
+        'Estou ouvindo... fale agora.';
+
+      document.getElementById('iniciar').disabled = true;
+
+      reconhecimento.onresult = function(evento) {
+        const texto = evento.results[0][0].transcript;
+
+        document.getElementById('status').textContent =
+          'Texto reconhecido: ' + texto;
+
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({
+            type: 'VOICE_RESULT',
+            text: texto
+          }, '*');
+
+          document.getElementById('status').textContent +=
+            ' — Enviado ao formulário. Volte para a guia anterior.';
+        } else {
+          document.getElementById('status').textContent +=
+            ' — Não encontrei o formulário aberto. Abra esta página pelo botão do formulário.';
+        }
+
+        document.getElementById('iniciar').disabled = false;
+      };
+
+      reconhecimento.onerror = function(evento) {
+        document.getElementById('status').textContent =
+          'Erro no microfone: ' + evento.error +
+          '. Verifique a permissão do navegador e tente novamente.';
+        document.getElementById('iniciar').disabled = false;
+      };
+
+      reconhecimento.onend = function() {
+        document.getElementById('iniciar').disabled = false;
+      };
+
+      reconhecimento.start();
+    }
+  </script>
+</body>
+</html>
